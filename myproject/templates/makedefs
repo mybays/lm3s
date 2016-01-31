@@ -1,0 +1,352 @@
+#Auther:mybays@qq.com
+#Date:Nov-18-2012
+
+
+
+#单片机类型,cortex-m3架构
+VARIANT=cm3
+
+#编译源文件时的搜索路径,VPATH是Makefile里有效文件路径
+#标准目录
+VPATH = ./
+VPATH += ${ROOT}
+VPATH += ${ROOT}/utils
+
+
+
+VPATH += ${ROOT}/myproject
+VPATH += ${ROOT}/myproject/drivers
+VPATH += ${ROOT}/myproject/templates
+VPATH += ${ROOT}/boot_loader
+VPATH += ${ROOT}/driverlib
+VPATH += ${ROOT}/grlib
+VPATH += ${ROOT}/usblib
+
+#VPATH += ${ROOT}/third_party/fatfs/port
+#VPATH += ${ROOT}/third_party/fatfs/src
+#VPATH += ${ROOT}/third_party
+
+VPATH += ${ROOT}/third_party/uip-1.0/apps/
+VPATH += ${ROOT}/third_party/uip-1.0/apps/dhcpc
+VPATH += ${ROOT}/third_party/uip-1.0/apps/httpd
+VPATH += ${ROOT}/third_party/uip-1.0/uip
+VPATH += ${ROOT}/third_party/uip-1.0/
+
+
+#额外的目录
+VPATH += ${EXTRAPATH}
+#include要搜索的文件夹
+IPATH = ${VPATH}
+
+#复位向量表
+ENTRY=ResetHandler
+
+#打包库文件路径
+EXTRA_LIBDIRS = ${ROOT}/driverlib/gcc-cm3/
+#额外的库文件
+EXTRA_LIBS =
+#静态库文件
+LIBA = ${EXTRA_LIBDIRS}/libdriver-cm3.a
+LIBA += ${ROOT}/grlib/gcc-cm3/libgr-cm3.a
+LIBA += ${ROOT}/usblib/gcc-cm3/libusb-cm3.a
+
+#优化级别:0,1,2,3,s
+OPT = s
+
+
+#作为开发者,一般情况下都是在调试,所以默认RAM
+ifndef run
+run = ram
+endif
+
+#输出目录
+OUTDIR = gcc
+
+
+#所有工程的都以main.c为主要源文件
+TARGET = main
+
+#启动源文件
+STARTUP = startup_${PART}.c
+
+#交叉编译链前缀
+#TCHAIN_PREFIX = arm-stellaris-eabi
+TCHAIN_PREFIX=${shell type arm-stellaris-eabi-gcc > /dev/null 2>&1 && \
+         echo arm-stellaris-eabi || echo arm-none-eabi}
+
+#定义编译命令相关
+SHELL = sh
+CC = $(TCHAIN_PREFIX)-gcc
+CPP = $(TCHAIN_PREFIX)-g++
+AS = $(TCHAIN_PREFIX)-as
+AR = $(TCHAIN_PREFIX)-ar
+LD = $(TCHAIN_PREFIX)-ld
+OBJCOPY = $(TCHAIN_PREFIX)-objcopy
+OBJDUMP = $(TCHAIN_PREFIX)-objdump
+SIZE = $(TCHAIN_PREFIX)-size
+NM = $(TCHAIN_PREFIX)-nm
+COPY = cp
+REMOVE_CMD = rm
+REMOVE = $(REMOVE_CMD) -f
+FLASH_TOOL = openocd
+
+
+
+
+#链接脚本的目录
+#
+LINKERSCRIPTPATH = ${ROOT}/myproject/templates
+
+
+ifndef VARIANT
+CPU=-mcpu=cortex-m3
+FPU=
+else
+ifeq (${VARIANT}, cm3)
+CPU=-mcpu=cortex-m3
+FPU=
+else
+ifeq (${VARIANT}, cm4f)
+CPU=-mcpu=cortex-m4
+FPU=-mfloat-abi=softfp
+else
+$(error Unknown processor variant ${VARIANT}!)
+endif
+endif
+endif
+
+
+#定义AFLAGS
+AFLAGS=-mthumb         \
+       ${CPU}  \
+       ${FPU}  \
+       -MD
+
+
+
+
+
+
+#定义CFLAGS
+CFLAGS=-mthumb             \
+       ${CPU}  \
+       ${FPU}  \
+       -Os                 \
+       -ffunction-sections \
+       -fdata-sections     \
+       -MD                 \
+       -std=c99            \
+       -Wall               \
+       -pedantic           \
+       -DPART_${PART}      \
+       -c
+
+
+# The flags passed to the linker.
+LDFLAGS=--gc-sections --entry $(ENTRY)
+
+
+ifdef DEBUG
+CFLAGS+=-g -D DEBUG
+endif
+
+#other cflags
+CFLAGS += ${CFLAGSgcc}
+
+ifdef DEBUG
+CFLAGS += -g -D DEBUG
+endif
+
+CFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
+
+
+
+
+#定义CPPFLAGS
+CPPFLAGS = -fno-rtti -fno-exceptions
+CPPFLAGS += 
+
+#定义ASFLAGS
+ASFLAGS = -mthumb
+ASFLAGS += $(CPU)
+ASFLAGS += -MD
+ASFLAGS += ${patsubst %,-I%,${subst :, ,${IPATH}}}
+#ASFLAGS += $(patsubst %,-I%,$(IPATH))
+ASFLAGS += -I. -x assembler-with-cpp
+ASFLAGS += -D__ASSEMBLY__
+ASFLAGS += -Wa,-adhlns=$(addprefix $(OUTDIR)/, $(notdir $(addsuffix .lst, $(basename $<))))
+ASFLAGS += -Wa,-g$(DEBUG)
+
+ASFLAGS += $(ADEFS)
+
+LIBGCC=${shell ${CC} ${CFLAGS} -print-libgcc-file-name}
+LIBC=${shell ${CC} ${CFLAGS} -print-file-name=libc.a}
+LIBM=${shell ${CC} ${CFLAGS} -print-file-name=libm.a}
+
+MATH_LIB = -lm
+
+
+
+#如果是内存调试
+ifeq ($(run),ram)
+LDFLAGS += -T $(LINKERSCRIPTPATH)/${PART}-ram.ld
+else 
+LDFLAGS += -T $(LINKERSCRIPTPATH)/${PART}-rom.ld
+endif
+
+
+#OPENOCD设置
+OOCD_LOADFILE+=$(OUTDIR)/$(TARGET).axf
+OOCD_EXE=openocd
+OOCD_CL=-d0
+OOCD_CL+=-f board/ek-${PART}.cfg
+OOCD_CL+=-c init -c targets
+OOCD_CL+=-c "halt"
+OOCD_CL+=-c "flash write_image erase $(OOCD_LOADFILE)" -c "verify_image $(OOCD_LOADFILE)"
+OOCD_CL+=-c "reset run"
+OOCD_CL+=-c shutdown
+
+
+
+
+# List of all source files.
+ALLSRC = $(ASRC) $(SRC) $(CPPSRC)
+ALLSRCBASE = $(notdir $(basename $(ALLSRC)))
+ALLOBJ  = $(addprefix $(OUTDIR)/, $(addsuffix .o, $(ALLSRCBASE)))
+
+LSTFILES = $(addprefix $(OUTDIR)/, $(addsuffix .lst, $(ALLSRCBASE)))
+DEPFILES = $(addprefix $(OUTDIR)/dep/, $(addsuffix .o.d, $(ALLSRCBASE)))
+
+
+
+############################################
+#FIXME	以下的部分尽量不要修改!!!!!
+############################################
+
+
+
+#编译从这里开始
+all: begin gccversion build sizeafter end
+
+begin:
+	@echo -e "\033[43;30m -------- begin (mode: $(run)) --------\033[0m"
+
+
+#显示编译器的版本号
+gccversion : 
+	@echo -e "\033[47;32m GCC version: \033[0m"
+	@$(CC) --version
+
+#设置编译目标文件格式
+
+build: axf hex bin lss sym
+
+#显示最后目标文件占用的rom和ram
+sizeafter:
+	@echo -e "\033[43;30m Size after build:\033[0m"
+	$(SIZE) -A -x $(OUTDIR)/$(TARGET).axf
+	@echo -e "\033[43;30m (mode: $(run))\033[0m"
+end:
+	@echo -e "\033[43;30m --------  end  --------\033[0m"
+
+
+
+axf: $(OUTDIR)/$(TARGET).axf
+	@if [ -f  $(TARGET).axf ]; then echo ;else $(COPY) $(OUTDIR)/$(TARGET).axf ./; fi
+lss: $(OUTDIR)/$(TARGET).lss 
+sym: $(OUTDIR)/$(TARGET).sym
+hex: $(OUTDIR)/$(TARGET).hex
+bin: $(OUTDIR)/$(TARGET).bin
+
+
+
+#生成hex文件
+%.hex: %.axf
+	@echo -e "\033[43;30mCreating load file:\033[0m" $@
+	$(OBJCOPY) -O ihex $< $@
+	
+#生成bin文件
+%.bin: %.axf
+	@echo -e "\033[43;30mCreating load file:\033[0m" $@
+	$(OBJCOPY) -O binary $< $@
+
+#生成反汇编文件
+# using objdump testing: option -C
+%.lss: %.axf
+	@echo -e "\033[43;30mCreating Extended Listing/Disassembly:\033[0m" $@
+	$(OBJDUMP) -h -S -C -r $< > $@
+
+#生成符号表
+%.sym: %.axf
+	@echo -e "\033[43;30mCreating Symbol Table:\033[0m" $@
+	$(NM) -n $< > $@
+
+# Link: create ELF output file from object files.
+.SECONDARY : $(TARGET).axf
+.PRECIOUS : $(ALLOBJ)
+
+
+
+%.axf:  $(ALLOBJ)
+	@echo
+	@echo -e "\033[43;30m Linking :\033[0m" $@
+	$(LD) $(LDFLAGS) -o $@ $(ALLOBJ) $(LIBA) ${LIBC} ${LIBM} ${LIBGCC}
+
+
+
+
+#直接将固件编程到单片机上,待修改
+program: $(TARGET).axf
+	@echo "\033[43;30mProgramming with OPENOCD\033[0m"
+	$(OOCD_EXE) $(OOCD_CL)
+
+
+#由汇编文件生成目标文件
+define ASSEMBLE_TEMPLATE
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+	@echo -e "\033[43;30mAssembling:\033[0m" $$< "->" $$@
+	$(CC) -c $(THUMB) $$(ASFLAGS) $$< -o $$@ 
+endef
+$(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src)))) 
+
+#由c文件生成目标文件
+define COMPILE_C_TEMPLATE
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+	@echo -e "\033[43;30m Compiling C :\033[0m" $$< "->" $$@
+	$(CC) -c $(CFLAGS) -Dgcc $$< -o $$@ 
+endef
+$(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src)))) 
+
+
+#由cpp文件生成目标文件
+define COMPILE_CPP_TEMPLATE
+$(OUTDIR)/$(notdir $(basename $(1))).o : $(1)
+	@echo -e "\033[43;30m Compiling C++ :\033[0m" $$< "->" $$@
+	$(CC) -c $(THUMB) $$(CFLAGS) $$(CPPFLAGS) $$< -o $$@ 
+endef
+$(foreach src, $(CPPSRC), $(eval $(call COMPILE_CPP_TEMPLATE, $(src)))) 
+
+
+
+# Compile: create assembler files from C source files. ARM/Thumb
+$(SRC:.c=.s) : %.s : %.c
+	@echo -e "\033[43;30mCreating asm-File from C-Source:\033[0m" $< to $@
+	$(CC) $(THUMB) -S $(CFLAGS) $(CONLYFLAGS) $< -o $@
+
+# Target: clean project.
+clean: begin clean_list end
+
+clean_list :
+	@echo $(MSG_CLEANING)
+	$(REMOVE) $(TARGET).axf
+	$(REMOVE) -r gcc
+
+
+# Create output files directory
+$(shell mkdir $(OUTDIR) 2>/dev/null)
+
+# Include the dependency files.
+-include $(shell mkdir $(OUTDIR)/dep 2>/dev/null) $(wildcard $(OUTDIR)/dep/*)
+# Listing of phony targets.
+.PHONY : all begin finish end sizeafter gccversion \
+build axf hex bin lss sym clean clean_list program
