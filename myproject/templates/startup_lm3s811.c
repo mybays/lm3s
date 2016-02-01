@@ -1,5 +1,5 @@
 /*
-Startup file for LM3S8962.
+Startup file for LM3S811.
 Modified in Mar.28.2010
 Template file,need modify for interupt function.
 */
@@ -11,6 +11,12 @@ static void FaultHandler(void);
 static void DefaultHandler(void);
 
 #define WEAK __attribute__ ((weak))
+
+
+//void WEAK ResetHandler(void);
+//void WEAK NmiHandler(void);
+//void WEAK FaultHandler(void);
+
 
 void WEAK MPUFaultHandler(void);
 void WEAK BusFaultHandler(void);
@@ -50,52 +56,55 @@ void WEAK Comp1IntHandler(void);
 void WEAK Comp2IntHandler(void);
 void WEAK SysCtrlIntHandler(void);
 void WEAK FlashCtrlIntHandler(void);
-//*****************************************************************************
-//
-// The entry point for the application.
-//
-//*****************************************************************************
+
+
+
+//entry point for app
 extern int main(void);
 
-//*****************************************************************************
-//
-// Reserve space for the system stack.
-//
-//*****************************************************************************
 static unsigned long pulStack[64];
 
-//*****************************************************************************
-//
-// The vector table.  Note that the proper constructs must be placed on this to
-// ensure that it ends up at physical address 0x0000.0000.
-//
-//*****************************************************************************
+
+//constructs from linker
+extern unsigned long _text;
+extern unsigned long _etext;
+extern unsigned long _data;
+extern unsigned long _edata;
+extern unsigned long _bss;
+extern unsigned long _ebss;
+extern unsigned long _heap;
+extern unsigned long _eheap;
+extern unsigned long _stack;
+extern unsigned long _estack;
+
+
+//vectors table
 __attribute__ ((section(".vectors")))
-void (* const g_pfnVectors[])(void) =
+void (* const _vectorstable[])(void) =
 {
-    (void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
-                                            // The initial stack pointer
-    ResetHandler,                               // The reset handler
-    NmiHandler,                                  // The NMI handler
-    FaultHandler,                               // The hard fault handler
-    MPUFaultHandler,                      // The MPU fault handler
-    BusFaultHandler,                      // The bus fault handler
-    UsageFaultHandler,                      // The usage fault handler
-    0,                                      // Reserved
-    0,                                      // Reserved
-    0,                                      // Reserved
-    0,                                      // Reserved
-    SVCallHandler,                      // SVCall handler
-    DebugMonHandler,                      // Debug monitor handler
-    0,                                      // Reserved
-    PendSVHandler,                      // The PendSV handler
-    SysTickIntHandler,                      // The SysTick handler
+//	&_estack,					// initial stack pointer
+	(void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
+	ResetHandler,				// Reset handler
+	NmiHandler,				// NMI handler
+	FaultHandler,				// hard fault handler
+	MPUFaultHandler,			// MPU fault handler
+	BusFaultHandler,			// bus fault handler
+	UsageFaultHandler,			// usage fault handler
+	0,						// reserved
+	0,						// reserved
+	0,						// reserved
+	0,						// reserved
+	SVCallHandler,				// SVCall handler
+	DebugMonHandler,			// Debug monitor handler
+	0,						// reserved
+	PendSVHandler,			// PendSV handler
+	SysTickIntHandler,			// SysTick handler
 
 	//
 	//External Interrupts
 	//
 
-    GPIOAIntHandler,			// GPIO Port A
+	GPIOAIntHandler,			// GPIO Port A
 	GPIOBIntHandler,			// GPIO Port B
 	GPIOCIntHandler,			// GPIO Port C
 	GPIODIntHandler,			// GPIO Port D
@@ -127,116 +136,92 @@ void (* const g_pfnVectors[])(void) =
 	FlashCtrlIntHandler,			// FLASH Control
 };
 
-//*****************************************************************************
-//
-// The following are constructs created by the linker, indicating where the
-// the "data" and "bss" segments reside in memory.  The initializers for the
-// for the "data" segment resides immediately following the "text" segment.
-//
-//*****************************************************************************
-extern unsigned long _etext;
-extern unsigned long _data;
-extern unsigned long _edata;
-extern unsigned long _bss;
-extern unsigned long _ebss;
 
-//*****************************************************************************
-//
-// This is the code that gets called when the processor first starts execution
-// following a reset event.  Only the absolutely necessary set is performed,
-// after which the application supplied entry() routine is called.  Any fancy
-// actions (such as making decisions based on the reset cause register, and
-// resetting the bits in that register) are left solely in the hands of the
-// application.
-//
-//*****************************************************************************
-void
-ResetHandler(void)
+
+
+//Reset Handler
+__attribute__ ((section(".init")))
+__attribute__ ((naked))
+void ResetHandler(void)
 {
-    unsigned long *pulSrc, *pulDest;
+	unsigned long *src,*dst;
 
-    //
-    // Copy the data segment initializers from flash to SRAM.
-    //
-    pulSrc = &_etext;
-    for(pulDest = &_data; pulDest < &_edata; )
-    {
-        *pulDest++ = *pulSrc++;
-    }
+	//set stack pointer
+	__asm(	"ldr r0,=%0\n"
+			"mov sp,r0\n"
+			:
+			: "i" (&_estack)
+		);
 
-    //
-    // Zero fill the bss segment.
-    //
-    __asm("    ldr     r0, =_bss\n"
-          "    ldr     r1, =_ebss\n"
-          "    mov     r2, #0\n"
-          "    .thumb_func\n"
-          "zero_loop:\n"
-          "        cmp     r0, r1\n"
-          "        it      lt\n"
-          "        strlt   r2, [r0], #4\n"
-          "        blt     zero_loop");
+	//set vector table address
+	__asm(	"ldr r0,=%0\n"
+			"ldr r1,=0xe000ed08\n"
+			"str r0,[r1]\n"
+			:
+			: "i" (&_text)
+		);
 
-    //
-    // Call the application's entry point.
-    //
-    main();
+	//copy the data segment initializers from flash to RAM
+	src=&_etext;
+	for(dst=(unsigned long*)&_data;dst<(unsigned long*)&_edata;)
+	{
+		*dst++=*src++;
+	}
+
+	//zero fill the bss segment
+	__asm(	"ldr r0,=_bss\n"
+			"ldr r1,=_ebss\n"
+			"mov r2,#0\n"
+			".thumb_func\n"
+			"zero_loop:\n"
+			"cmp r0,r1\n"
+			"it lt\n"
+			"strlt r2,[r0],#4\n"
+			"blt zero_loop"
+		);
+
+	//jump to app`s entry point
+	__asm(	"mov r0,#0\n"
+			"mov r1,#0\n"
+			"ldr r2,=%0\n"
+			"blx r2\n"
+			:
+			: "i" (main)
+		);
+
+	//dead loop,never reach this point
+	while(1);
 }
 
-//*****************************************************************************
-//
-// This is the code that gets called when the processor receives a NMI.  This
-// simply enters an infinite loop, preserving the system state for examination
-// by a debugger.
-//
-//*****************************************************************************
-static void
-NmiHandler(void)
+
+
+
+//NMI Handler
+static void NmiHandler(void)
 {
-    //
-    // Enter an infinite loop.
-    //
-    while(1)
-    {
-    }
+	while(1);
 }
+
+//Fault Handler
+static void FaultHandler(void)
+{
+	while(1);
+}
+
+//Default Handler
+static void DefaultHandler(void)
+{
+	while(1);
+}
+
 
 //*****************************************************************************
 //
-// This is the code that gets called when the processor receives a fault
-// interrupt.  This simply enters an infinite loop, preserving the system state
-// for examination by a debugger.
+// Provide weak aliases for each Exception handler to the Default_Handler.
+// As they are weak aliases, any function with the same name will override
+// this definition.
 //
 //*****************************************************************************
-static void
-FaultHandler(void)
-{
-    //
-    // Enter an infinite loop.
-    //
-    while(1)
-    {
-    }
-}
-
-//*****************************************************************************
-//
-// This is the code that gets called when the processor receives an unexpected
-// interrupt.  This simply enters an infinite loop, preserving the system state
-// for examination by a debugger.
-//
-//*****************************************************************************
-static void
-DefaultHandler(void)
-{
-    //
-    // Go into an infinite loop.
-    //
-    while(1)
-    {
-    }
-}
-
 #pragma weak MPUFaultHandler=DefaultHandler
 #pragma weak BusFaultHandler=DefaultHandler
 #pragma weak UsageFaultHandler=DefaultHandler
