@@ -1,10 +1,15 @@
 /*
 Link script for LM3S8962 in ram.
-Modified in Jul.17.2011
+Modified in Feb.12.2016
 256K Flash,based on 0x00000000 to 0x00040000
-64K Ram,based on 0x20000000 to 0x00010000
+64K Ram,based on 0x20000000 to 0x20010000
+
 其中32K ram当flash使用,32K ram当ram使用
+
 */
+
+
+
 MEMORY
 {
     FLASH (rx) : ORIGIN = 0x20000000, LENGTH = 0x00008000
@@ -74,3 +79,4 @@ SECTIONS
 
     PROVIDE(__HEAP_START  = _heap);
 }
+

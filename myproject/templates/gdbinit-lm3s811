@@ -5,7 +5,7 @@ define ram
 monitor reset
 monitor soft_reset_halt
 load main.axf
-monitor reg pc 0x200000f1
+monitor reg pc 0x200000b9
 monitor resume
 end
 

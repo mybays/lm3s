@@ -1,5 +1,5 @@
 /*
-Startup file for LM3S8962.
+Startup file for LM3S9B96.
 Modified in Feb.12.2016
 Template file,need modify for interupt function.
 */
@@ -71,6 +71,18 @@ void WEAK CAN2IntHandler(void);
 void WEAK EthernetIntHandler(void);
 void WEAK HibernateIntHandler(void);
 
+//Extra for LM3S9B96
+void WEAK USB0IntHandler(void);
+void WEAK PWMGen3IntHandler(void);
+void WEAK UdmaSoftHandler(void);
+void WEAK UdmaErrorHandler(void);
+void WEAK ADC10IntHandler(void);
+void WEAK ADC11IntHandler(void);
+void WEAK ADC12IntHandler(void);
+void WEAK ADC13IntHandler(void);
+void WEAK I2S0IntHandler(void);
+void WEAK EBIIntHandler(void);
+void WEAK GPIOJIntHandler(void);
 
 
 //entry point for app
@@ -161,7 +173,19 @@ void (* const _vectorstable[])(void) =
 	CAN1IntHandler,			// CAN 1
 	CAN2IntHandler,			// CAN 2
 	EthernetIntHandler,			// Ethernet
-	HibernateIntHandler			// Hibernate
+	HibernateIntHandler,			// Hibernate
+	//Extra for LM3S9B96
+	USB0IntHandler,                      // USB0
+	PWMGen3IntHandler,                      // PWM Generator 3
+	UdmaSoftHandler,                      // uDMA Software Transfer
+	UdmaErrorHandler,                      // uDMA Error
+	ADC10IntHandler,                      // ADC1 Sequence 0
+	ADC11IntHandler,                      // ADC1 Sequence 1
+	ADC12IntHandler,                      // ADC1 Sequence 2
+	ADC13IntHandler,                      // ADC1 Sequence 3
+	I2S0IntHandler,                      // I2S0
+	EBIIntHandler,                      // External Bus Interface 0
+	GPIOJIntHandler                       // GPIO Port J
 };
 
 
@@ -302,3 +326,15 @@ static void DefaultHandler(void)
 #pragma weak CAN2IntHandler=DefaultHandler
 #pragma weak EthernetIntHandler=DefaultHandler
 #pragma weak HibernateIntHandler=DefaultHandler
+//Extra for LM3S9B96
+#pragma weak USB0IntHandler=DefaultHandler
+#pragma weak PWMGen3IntHandler=DefaultHandler
+#pragma weak UdmaSoftHandler=DefaultHandler
+#pragma weak UdmaErrorHandler=DefaultHandler
+#pragma weak ADC10IntHandler=DefaultHandler
+#pragma weak ADC11IntHandler=DefaultHandler
+#pragma weak ADC12IntHandler=DefaultHandler
+#pragma weak ADC13IntHandler=DefaultHandler
+#pragma weak I2S0IntHandler=DefaultHandler
+#pragma weak EBIIntHandler=DefaultHandler
+#pragma weak GPIOJIntHandler=DefaultHandler

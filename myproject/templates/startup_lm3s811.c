@@ -1,6 +1,6 @@
 /*
 Startup file for LM3S811.
-Modified in Mar.28.2010
+Modified in Feb.12.2016
 Template file,need modify for interupt function.
 */
 
@@ -133,7 +133,7 @@ void (* const _vectorstable[])(void) =
 	Comp1IntHandler,			// Analog Comparator 1
 	Comp2IntHandler,			// Analog Comparator 2
 	SysCtrlIntHandler,			// System Control (PLL, OSC, BO)
-	FlashCtrlIntHandler,			// FLASH Control
+	FlashCtrlIntHandler			// FLASH Control
 };
 
 

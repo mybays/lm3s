@@ -1,5 +1,5 @@
 #Auther:mybays@qq.com
-#Date:Nov-18-2012
+#Date:Feb-12-2016
 
 
 
@@ -21,6 +21,7 @@ VPATH += ${ROOT}/boot_loader
 VPATH += ${ROOT}/driverlib
 VPATH += ${ROOT}/grlib
 VPATH += ${ROOT}/usblib
+VPATH += ${ROOT}/drivers
 
 #VPATH += ${ROOT}/third_party/fatfs/port
 #VPATH += ${ROOT}/third_party/fatfs/src
@@ -207,6 +208,26 @@ OOCD_CL+=-c "reset run"
 OOCD_CL+=-c shutdown
 
 
+#OPENOCD RAMRUN
+OOCD_R811=-d0
+OOCD_R811+=-f board/ek-${PART}.cfg
+OOCD_R811+=-c init -c targets
+OOCD_R811+=-c "halt"
+OOCD_R811+=-c "load_image $(OUTDIR)/$(TARGET).bin 0x20000000 bin"
+OOCD_R811+=-c "reg pc 0x200000b8"
+OOCD_R811+=-c "resume"
+OOCD_R811+=-c shutdown
+
+#OPENOCD RAMRUN
+OOCD_R8962=-d0
+OOCD_R8962+=-f board/ek-${PART}.cfg
+OOCD_R8962+=-c init -c targets
+OOCD_R8962+=-c "halt"
+OOCD_R8962+=-c "load_image $(OUTDIR)/$(TARGET).bin 0x20000000 bin"
+OOCD_R8962+=-c "reg pc 0x200000f1"
+OOCD_R8962+=-c "resume"
+OOCD_R8962+=-c shutdown
+
 
 
 # List of all source files.
@@ -299,6 +320,15 @@ bin: $(OUTDIR)/$(TARGET).bin
 program: $(TARGET).axf
 	@echo "\033[43;30mProgramming with OPENOCD\033[0m"
 	$(OOCD_EXE) $(OOCD_CL)
+
+#RAM RUN
+R811:$(TARGET).axf
+	@echo "\033[43;30mRAM RUN with OPENOCD\033[0m"
+	$(OOCD_EXE) $(OOCD_R811)
+
+R8962:$(TARGET).axf
+	@echo "\033[43;30mRAM RUN with OPENOCD\033[0m"
+	$(OOCD_EXE) $(OOCD_R8962)
 
 
 #由汇编文件生成目标文件

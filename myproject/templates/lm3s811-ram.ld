@@ -1,8 +1,8 @@
 /*
-Link script for LM3S811 in flash.
-Modified in Jul.17.2011
+Link script for LM3S811 in ram.
+Modified in Feb.12.2016
 64K Flash,based on 0x00000000 to 0x00010000
-8K Ram,based on 0x200000000 to 0x00002000
+8K Ram,based on 0x20000000 to 0x20002000
 
 其中4K ram当flash使用,4K ram当ram使用
 

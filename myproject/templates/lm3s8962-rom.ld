@@ -1,8 +1,8 @@
 /*
 Link script for LM3S8962 in flash.
-Modified in Jul.17.2011
+Modified in Feb.12.2016
 256K Flash,based on 0x00000000 to 0x00040000
-64K Ram,based on 0x200000000 to 0x00010000
+64K Ram,based on 0x20000000 to 0x20010000
 */
 
 
