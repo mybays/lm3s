@@ -2,4 +2,4 @@
 #define OW_BUS_BASE GPIO_PORTC_BASE
 #define OW_BUS GPIO_PIN7
 #define GPIO_PIN7 7
-#define MAXSENSORS 1
+#define MAXSENSORS 5

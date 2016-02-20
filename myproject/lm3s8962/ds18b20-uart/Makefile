@@ -14,6 +14,8 @@ SRC += ds18b20.c
 SRC += uartstdio.c
 SRC += rit128x96x4.c
 SRC += ustdlib.c
+SRC += crc8.c
+SRC += 1wire.c
 #额外的CFLAG
 #CFLAGSgcc=-DUART_BUFFERED -DTARGET_IS_DUSTDEVIL_RA0
 #需要编译的C++源文件

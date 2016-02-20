@@ -15,6 +15,7 @@
 
 #include "mydelay.h"
 #include "ds18b20.h"
+#include "1wire.h"
 #ifdef DEBUG
 void
 __error__(char *pcFilename, unsigned long ulLine)
@@ -22,44 +23,13 @@ __error__(char *pcFilename, unsigned long ulLine)
 }
 #endif
 
+uint8_t subzero,cel[MAXSENSORS],cel_frac_bits[MAXSENSORS];
 
-#define MAXSENSORS 1
-uint8_t gSensorIDs[OW_ROMCODE_SIZE];
-uint8_t subzero,cel,cel_frac_bits;
-
-uint8_t buffer[sizeof(int)*8+1];
-uint8_t search_sensors(void)
-{
-	uint8_t i;
-	uint8_t id[OW_ROMCODE_SIZE];
-	uint8_t diff,nSensors=0;
-	UARTprintf("Scanning Bus for DS18X20.\n");
-	for(diff=OW_SEARCH_FIRST;diff != OW_LAST_DEVICE && nSensors<MAXSENSORS;)
-	{
-		DS18X20_find_sensor(&diff,&id[0]);
-		if(diff==OW_PRESENCE_ERR)
-		{
-			UARTprintf("No Sensors found.\n");
-			break;
-		}
-		if(diff==OW_DATA_ERR)
-		{
-			UARTprintf("Bus Error.\n");
-			break;
-		}
-		for(i=0;i<OW_ROMCODE_SIZE;i++)
-			gSensorIDs[i]=id[i];
-		nSensors++;
-	}
-	return nSensors;
-}
-
-//若总线上存在DS18B20,值为真,否则为0
-int ds18b20_present=0;
 
 int main()
 {
 	uint8_t i,j;
+	uint64_t u_sensorid[MAXSENSORS];
 
 	unsigned long SysClock=0;
 	//使能PLL,系统时钟为50MHz
@@ -91,26 +61,7 @@ int main()
 	GPIOPadConfigSet(GPIO_PORTC_BASE,GPIO_PIN_7,GPIO_STRENGTH_4MA,GPIO_PIN_TYPE_STD_WPU);
 	ow_dir_out();
 	ow_out_high();
-/*
-	while(1)
-	{
-		ow_out_high();
-		_delay_ms(1000);
-		ow_out_low();
-		_delay_ms(1000);
-	}
-*/
-/*
-	ow_dir_out();
-	GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE,0x80);
-//	while(1)
-	{
-		ow_out_high();
-		_delay_ms(1000);
-		ow_out_low();
-		_delay_ms(1000);
-	}
-*/
+
 
 	if(ow_reset())
 		UARTprintf("one-wire bus error.\n");
@@ -120,31 +71,47 @@ int main()
 
 
 	uint8_t nSensors;
-	nSensors=search_sensors();
-	UARTprintf("%d Sensors found.\n",nSensors);
+	nSensors=search_sensors(&u_sensorid[0],MAXSENSORS);
+	uint8_t (*pid)[];
+	pid=(uint8_t *)&u_sensorid[0];
 
+	UARTprintf("%d Sensors found.\n",nSensors);
+	for(i=0;i<nSensors;i++)
+	{
 		UARTprintf("# %d:",i);
 		for(j=0;j<OW_ROMCODE_SIZE;j++)
-		UARTprintf("0x%x ",gSensorIDs[j]);
+		{
+			UARTprintf("0x%x ",(*pid+i)[j]);
+		}
+		
 		UARTprintf("\n");
+	}
+		
 
 	while(1)
 	{
-		if(DS18X20_get_temp(&gSensorIDs[0],&subzero,&cel,&cel_frac_bits))
-			return -1;
-		else
+		for(i=0;i<nSensors;i++)
 		{
-					if(subzero)
-						UARTprintf("-");
-					else
-						UARTprintf("+");
-					UARTprintf("%d.",(int8_t)cel);
+			UARTprintf("#%d: ",i);
+			pid=(uint8_t *)&u_sensorid[0];
+
+			//if(DS18X20_get_temp((uint8_t *)&u_sensorid[i],&subzero,&cel[i],&cel_frac_bits[i]))
+			if(DS18X20_get_temp(pid,&subzero,&cel[i],&cel_frac_bits[i]))
+			return -1;
+			else
+			{
+				if(subzero)
+					UARTprintf("-");
+				else
+					UARTprintf("+");
+				UARTprintf("%d.",(int8_t)cel[i]);
 //					itoa(cel_frac_bits*DS18X20_FRACCONV,(char)buffer,10);
 //					for(i=0;i<4-strlen(buffer);i++)
 //					UARTprintf("0");
-					UARTprintf("%4d C`\n",cel_frac_bits*DS18X20_FRACCONV);
-			
+				UARTprintf("%4d C`\n",cel_frac_bits[i]*DS18X20_FRACCONV);
+			}
 		}
+		
 	}
 
 	while(1)
@@ -155,53 +122,22 @@ int main()
 			for(i=0;i<nSensors;i++)
 			{
 				UARTprintf("Sensor# %d =",i);
-				if(DS18X20_read_meas(&gSensorIDs[0],&subzero,&cel,&cel_frac_bits)==DS18X20_OK)
+				if(DS18X20_read_meas((uint8_t *)&u_sensorid[i],&subzero,&cel[i],&cel_frac_bits[i])==DS18X20_OK)
 				{
 					if(subzero)
 						UARTprintf("-");
 					else
 						UARTprintf("+");
-					UARTprintf("%d.",(int8_t)cel);
+					UARTprintf("%d.",(int8_t)cel[i]);
 //					itoa(cel_frac_bits*DS18X20_FRACCONV,(char)buffer,10);
 //					for(i=0;i<4-strlen(buffer);i++)
 //					UARTprintf("0");
-					UARTprintf("%o4dC`\n",cel_frac_bits*DS18X20_FRACCONV);
+					UARTprintf("%04dC`\n",cel_frac_bits[i]*DS18X20_FRACCONV);
 					
 				}
 				else
 					UARTprintf("CRC Error.\n");
 			}
 		}
-		_delay_ms(10);
 	}
-
-
-
-/*
-	//test gpio,led:PF0,高电平点亮,select key:PF1,按下为低电平
-	//使能PORTF
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-	//PF0,发光二极管,设置为输出
-//	HWREG(GPIO_PORTF_BASE+GPIO_O_DIR)|=0x01;
-	//PF1,按键,设置为输入
-//	HWREG(GPIO_PORTF_BASE+GPIO_O_DIR)&=0xFD;
-	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE,0x01);
-	GPIOPinTypeGPIOInput(GPIO_PORTF_BASE,0x02);
-	while(1)
-	{
-		if(HWREG(GPIO_PORTF_BASE+GPIO_O_DATA+(0xff<<2))&0x02)
-			GPIOPinWrite(GPIO_PORTF_BASE,0x01,0x01);
-		else
-			GPIOPinWrite(GPIO_PORTF_BASE,0x01,0x00);
-	}
-	
-*/
-	//test uart and sysclock
-	while(1)
-	{
-		UARTprintf("%d\n",SysClock);
-		_delay_ms(1000);
-	};
-  
-
 }
