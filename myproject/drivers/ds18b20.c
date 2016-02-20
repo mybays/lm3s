@@ -86,7 +86,7 @@ extern uint8_t DS18X20_meas_to_cel(uint8_t fc,uint8_t *sp,uint8_t* subzero,uint8
 		else
 			meas&=~(DS18B20_9_BIT_UNDF);
 	}
-	UARTprintf("meas:%d.\n",meas);
+	//UARTprintf("meas:%d.\n",meas);
 	*cel=(uint8_t)(meas>>4);
 	*cel_frac_bits=(uint8_t)(meas&0x000F);
 	return DS18X20_OK;
