@@ -1,0 +1,5 @@
+//定义单线总线要使用的GPIO,PC7
+#define OW_BUS_BASE GPIO_PORTC_BASE
+#define OW_BUS GPIO_PIN7
+#define GPIO_PIN7 7
+#define MAXSENSORS 1
