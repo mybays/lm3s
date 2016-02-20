@@ -31,6 +31,8 @@ int main()
 	uint8_t i,j;
 	uint64_t u_sensorid[MAXSENSORS];
 
+	memset(u_sensorid,0,8*MAXSENSORS);
+
 	unsigned long SysClock=0;
 	//使能PLL,系统时钟为50MHz
 	SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ);
@@ -71,17 +73,18 @@ int main()
 
 
 	uint8_t nSensors;
-	nSensors=search_sensors(&u_sensorid[0],MAXSENSORS);
+	nSensors=search_sensors(u_sensorid,MAXSENSORS);
 	uint8_t (*pid)[];
-	pid=(uint8_t *)&u_sensorid[0];
+	
 
 	UARTprintf("%d Sensors found.\n",nSensors);
 	for(i=0;i<nSensors;i++)
 	{
+		pid=(uint8_t *)&u_sensorid[i];
 		UARTprintf("# %d:",i);
 		for(j=0;j<OW_ROMCODE_SIZE;j++)
 		{
-			UARTprintf("0x%x ",(*pid+i)[j]);
+			UARTprintf("0x%x ",(*pid)[j]);
 		}
 		
 		UARTprintf("\n");
@@ -93,7 +96,7 @@ int main()
 		for(i=0;i<nSensors;i++)
 		{
 			UARTprintf("#%d: ",i);
-			pid=(uint8_t *)&u_sensorid[0];
+			pid=(uint8_t *)&u_sensorid[i];
 
 			//if(DS18X20_get_temp((uint8_t *)&u_sensorid[i],&subzero,&cel[i],&cel_frac_bits[i]))
 			if(DS18X20_get_temp(pid,&subzero,&cel[i],&cel_frac_bits[i]))

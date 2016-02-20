@@ -168,10 +168,11 @@ uint8_t search_sensors(uint64_t gid[],uint8_t maxnum)
 	uint8_t id[OW_ROMCODE_SIZE];
 	uint8_t diff,nSensors=0;
 	uint8_t (*pid)[];
-	pid=(uint8_t *)&gid[0];
+	
 	UARTprintf("Scanning Bus for DS18X20.\n");
 	for(diff=OW_SEARCH_FIRST;diff != OW_LAST_DEVICE && nSensors<MAXSENSORS;)
 	{
+		pid=(uint8_t *)&gid[nSensors];
 		DS18X20_find_sensor(&diff,&id[0]);
 		if(diff==OW_PRESENCE_ERR)
 		{
