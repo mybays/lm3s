@@ -30,8 +30,10 @@ VPATH += ${ROOT}/drivers
 VPATH += ${ROOT}/third_party/uip-1.0/apps/
 VPATH += ${ROOT}/third_party/uip-1.0/apps/dhcpc
 VPATH += ${ROOT}/third_party/uip-1.0/apps/httpd
+VPATH += ${ROOT}/third_party/uip-1.0/apps/telnetd
 VPATH += ${ROOT}/third_party/uip-1.0/uip
 VPATH += ${ROOT}/third_party/uip-1.0/
+VPATH += ${ROOT}/third_party/uip-1.0/lib
 
 
 #额外的目录

@@ -84,7 +84,7 @@ int main()
 		UARTprintf("# %d:",i);
 		for(j=0;j<OW_ROMCODE_SIZE;j++)
 		{
-			UARTprintf("0x%x ",(*pid)[j]);
+			UARTprintf("0x%02x ",(*pid)[j]);
 		}
 		
 		UARTprintf("\n");
@@ -111,7 +111,7 @@ int main()
 //					itoa(cel_frac_bits*DS18X20_FRACCONV,(char)buffer,10);
 //					for(i=0;i<4-strlen(buffer);i++)
 //					UARTprintf("0");
-				UARTprintf("%4d C`\n",cel_frac_bits[i]*DS18X20_FRACCONV);
+				UARTprintf("%d C`\n",cel_frac_bits[i]*DS18X20_FRACCONV);
 			}
 		}
 		
