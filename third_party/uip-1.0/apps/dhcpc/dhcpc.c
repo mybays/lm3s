@@ -138,6 +138,21 @@ add_end(u8_t *optptr)
   *optptr++ = DHCP_OPTION_END;
   return optptr;
 }
+static u8_t *
+add_hostname(u8_t *optptr)
+{
+  *optptr++ = 12;
+  *optptr++ = 8;
+  *optptr++ = 'l';
+  *optptr++ = 'm';
+  *optptr++ = '3';
+  *optptr++ = 's';
+  *optptr++ = '8';
+  *optptr++ = '9';
+  *optptr++ = '6';
+  *optptr++ = '2';
+  return optptr;
+}
 /*---------------------------------------------------------------------------*/
 static void
 create_msg(register struct dhcp_msg *m)
@@ -173,6 +188,7 @@ send_discover(void)
   create_msg(m);
 
   end = add_msg_type(&m->options[4], DHCPDISCOVER);
+  end = add_hostname(end);
   end = add_req_options(end);
   end = add_end(end);
 
@@ -189,6 +205,7 @@ send_request(void)
   
   end = add_msg_type(&m->options[4], DHCPREQUEST);
   end = add_server_id(end);
+  end = add_hostname(end);
   end = add_req_ipaddr(end);
   end = add_end(end);
   
