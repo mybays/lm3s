@@ -1,0 +1,1 @@
+../../templates/gdbinit-lm3s8962

@@ -194,6 +194,7 @@ void systemprobe(void)
 	if(CLASS_IS_TEMPEST)
 		UARTprintf("System is tempest.\n");
 	if(CLASS_IS_FIRESTORM)
+        UARTprintf("System is firestorm.\n");
 	if(REVISION_IS_A0)
 		UARTprintf("System is A0.\n");
 	if(REVISION_IS_A1)
@@ -212,5 +213,6 @@ void systemprobe(void)
 		UARTprintf("System is C2.\n");
 	if(REVISION_IS_C3)
 		UARTprintf("System is C3.\n");
-
+    if(REVISION_IS_C5)
+        UARTprintf("System is C3.\n");
 }

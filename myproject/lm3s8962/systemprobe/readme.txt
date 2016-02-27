@@ -1,0 +1,5 @@
+EK-LM3S8962:
+
+256KB flash
+64KB ram
+50MHz

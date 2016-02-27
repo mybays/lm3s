@@ -10,8 +10,20 @@ PART=LM3S8962
 SRC = $(TARGET).c
 SRC += startup_${PART}.c
 SRC += mydelay.c
+SRC += audio.c
+SRC += can_net.c
+SRC += enet.c
+SRC += fs_qs.c
+SRC += game.c
+SRC += httpd.c
+SRC += images.c
+SRC += locator.c
+SRC += lwiplib.c
+SRC += random.c
 SRC += rit128x96x4.c
-SRC += ustdlib.c
+SRC += screen_saver.c
+SRC += sounds.c
+
 #额外的CFLAG
 #CFLAGSgcc=-DUART_BUFFERED -DTARGET_IS_DUSTDEVIL_RA0
 #需要编译的C++源文件

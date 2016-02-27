@@ -8,13 +8,9 @@ VARIANT=cm3
 
 #编译源文件时的搜索路径,VPATH是Makefile里有效文件路径
 #标准目录
-VPATH = ./
-VPATH += ./apps
+
 VPATH += ${ROOT}
 VPATH += ${ROOT}/utils
-
-
-
 VPATH += ${ROOT}/myproject
 VPATH += ${ROOT}/myproject/drivers
 VPATH += ${ROOT}/myproject/templates
@@ -33,12 +29,15 @@ VPATH += ${ROOT}/third_party/uip-1.0/apps/dhcpc
 #VPATH += ${ROOT}/third_party/uip-1.0/apps/httpd
 VPATH += ${ROOT}/third_party/uip-1.0/apps/telnetd
 VPATH += ${ROOT}/third_party/uip-1.0/apps/hello-world
-VPATH += ${ROOT}/third_party/uip-1.0/apps/webserver
+#VPATH += ${ROOT}/third_party/uip-1.0/apps/webserver
 VPATH += ${ROOT}/third_party/uip-1.0/uip
 VPATH += ${ROOT}/third_party/uip-1.0/
 VPATH += ${ROOT}/third_party/uip-1.0/lib
-
-
+VPATH += ${ROOT}/third_party/lwip-1.3.2/src/include
+VPATH += ${ROOT}/third_party/lwip-1.3.2/ports/stellaris/include
+VPATH += ${ROOT}/third_party/lwip-1.3.2/src/include/ipv4
+VPATH += ${ROOT}/third_party/lwip-1.3.2/apps
+VPATH += ${ROOT}/third_party/lwip-1.3.2/apps/httpserver_raw
 #额外的目录
 VPATH += ${EXTRAPATH}
 #include要搜索的文件夹
@@ -134,8 +133,7 @@ AFLAGS=-mthumb         \
 
 
 #定义CFLAGS
-CFLAGS=-mthumb             \
-       ${CPU}  \
+CFLAGS += ${CPU}  \
        ${FPU}  \
        -Os                 \
        -ffunction-sections \
