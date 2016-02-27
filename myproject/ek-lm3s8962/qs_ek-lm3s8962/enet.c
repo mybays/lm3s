@@ -91,7 +91,9 @@ EnetInit(void)
     // non-volatile USER0 and USER1 registers.  These registers can be read
     // using the FlashUserGet function, as illustrated below.
     //
-    FlashUserGet(&ulUser0, &ulUser1);
+    //FlashUserGet(&ulUser0, &ulUser1);
+    ulUser0=0x0090a944;
+    ulUser1=0x00006289;
 
     //
     // Convert the 24/24 split MAC address from NV ram into a 32/16 split

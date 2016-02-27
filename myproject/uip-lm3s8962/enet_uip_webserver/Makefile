@@ -3,7 +3,7 @@
 #Date:Nov-18-2012
 
 #单片机的型号
-PART=lm3s8962
+PART=LM3S8962
 
 
 #需要编译的C源文件
@@ -33,5 +33,19 @@ ASRC +=
 
 #开发环境的根目录
 ROOT=../../..
+
+#编译源文件时的搜索路径,VPATH是Makefile里有效文件路径
+VPATH = ./
+VPATH += ${ROOT}/third_party/uip-1.0
+VPATH += ${ROOT}/third_party/uip-1.0/uip
+VPATH += ${ROOT}/third_party/uip-1.0/lib
+VPATH += ${ROOT}/third_party/uip-1.0/apps
+VPATH += ${ROOT}/third_party/uip-1.0/apps/dhcpc
+VPATH += ${ROOT}/third_party/uip-1.0/apps/webserver
+VPATH += ${ROOT}/third_party/uip-1.0/apps/telnetd
+VPATH += ${ROOT}/third_party/uip-1.0/apps/hello-world
+#定义CFLAGS
+CFLAGS = -mthumb
+
 
 include ${ROOT}/myproject/templates/makedefs

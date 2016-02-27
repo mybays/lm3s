@@ -23,16 +23,8 @@ VPATH += ${ROOT}/drivers
 #VPATH += ${ROOT}/third_party/fatfs/port
 #VPATH += ${ROOT}/third_party/fatfs/src
 #VPATH += ${ROOT}/third_party
-
-VPATH += ${ROOT}/third_party/uip-1.0/apps/
-VPATH += ${ROOT}/third_party/uip-1.0/apps/dhcpc
-#VPATH += ${ROOT}/third_party/uip-1.0/apps/httpd
-VPATH += ${ROOT}/third_party/uip-1.0/apps/telnetd
-VPATH += ${ROOT}/third_party/uip-1.0/apps/hello-world
 #VPATH += ${ROOT}/third_party/uip-1.0/apps/webserver
-VPATH += ${ROOT}/third_party/uip-1.0/uip
-VPATH += ${ROOT}/third_party/uip-1.0/
-VPATH += ${ROOT}/third_party/uip-1.0/lib
+
 VPATH += ${ROOT}/third_party/lwip-1.3.2/src/include
 VPATH += ${ROOT}/third_party/lwip-1.3.2/ports/stellaris/include
 VPATH += ${ROOT}/third_party/lwip-1.3.2/src/include/ipv4
