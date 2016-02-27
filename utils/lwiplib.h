@@ -83,7 +83,7 @@ extern void lwIPInit(const unsigned char *pucMac, unsigned long ulIPAddr,
                      unsigned long ulNetMask, unsigned long ulGWAddr,
                      unsigned long ulIPMode);
 extern void lwIPTimer(unsigned long ulTimeMS);
-extern void lwIPEthernetIntHandler(void);
+extern void EthernetIntHandler(void);
 extern unsigned long lwIPLocalIPAddrGet(void);
 extern unsigned long lwIPLocalNetMaskGet(void);
 extern unsigned long lwIPLocalGWAddrGet(void);

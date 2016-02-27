@@ -849,7 +849,7 @@ lwIPTimer(unsigned long ulTimeMS)
 //
 //*****************************************************************************
 void
-lwIPEthernetIntHandler(void)
+EthernetIntHandler(void)
 {
     unsigned long ulStatus;
 #if !NO_SYS
